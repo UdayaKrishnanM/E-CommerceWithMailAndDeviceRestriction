@@ -112,19 +112,15 @@ public class AdminBasedController {
     @DeleteMapping("/deleteProduct/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
     	String deleted = productService.deleteProduct(id);
-    	if(deleted != "Product Not Exists") {
+    	if(!"Product Not Exists".equals(deleted)) {
     		return new ResponseEntity<String>("Order id with " + id + " deleted succesfully" ,HttpStatus.OK);
     	} else {
     		throw new OrderNotFoundException("Order not found with id: " + id);
     	}
     }
     
-    // *********** PRODUCT EXCEPTION HANDLER*********//
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<String> handleProductNotFoundException(ProductNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-     
+    // *********** PRODUCT EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
+
     
     // ###############################//
 	// ********* ORDER ENTITY ********//
@@ -171,14 +167,9 @@ public class AdminBasedController {
     }
 
     
-    // *********** ORDER EXCEPTION HANDLER*********//
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<String> handleOrderNotFoundException(OrderNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
+    // *********** ORDER EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
 
-  	
-       
+
     // ###################################//
 	// ********* ORDER_ITEM ENTITY this is not neeeded to be accessed *******//
     //------------------------------------//

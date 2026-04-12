@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.ecommerce.demo.dto.CartItemResponseDTO;
@@ -50,6 +51,7 @@ public class CartItemService {
 		return cartItemRepository.findByUserId(userId);
 	}
 
+	@Transactional
 	public String addCartItem(CartItem cartItem) {
 		// 🔐 Authenticated user's email
 		String authenticatedEmail;
@@ -131,6 +133,7 @@ public class CartItemService {
 	}
 
 
+	@Transactional
 	public Optional<CartResponseDTO> updateCartItem(CartItem updateCartItem) {
 		// 🔐 Get authenticated user
 		String authenticatedEmail;
@@ -310,6 +313,7 @@ public class CartItemService {
 		return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
 	}
 
+	@Transactional
 	public String deleteCartItem(Long id, CartItem cartItemUser) {
 		// 🔐 1. Get authenticated user's email
 		String authenticatedEmail;

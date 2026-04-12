@@ -120,7 +120,7 @@ public class UserAccessController {
     public ResponseEntity<String> deletOrder(@PathVariable Long id) {
         
     	String deleted =  orderService.deleteOrder(id);
-    	if(deleted != "Order ID Not Exists") {
+    	if(!"Order ID Not Exists".equals(deleted)) {
     		return new ResponseEntity<String>("Order id with " + id + " deleted succesfully" ,HttpStatus.OK);
     	} else {
     		throw new OrderNotFoundException("Order not found with id: " + id);
@@ -153,11 +153,7 @@ public class UserAccessController {
 	}
 	
 	
-    // *********** ORDER EXCEPTION HANDLER *********//
-    @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<String> handleOrderNotFoundException(OrderNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
+    // *********** ORDER EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
 	
 	
     // ###################################//
@@ -249,11 +245,7 @@ public class UserAccessController {
     }
 
 
-    // *********** REVIEW CODE EXCEPTION HANDLER *********//
-    @ExceptionHandler(ReviewNotFoundException.class)
-    public ResponseEntity<String> handleReviewNotFoundException(ReviewNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
+    // *********** REVIEW CODE EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
 
 
     // ###############################//
@@ -275,13 +267,11 @@ public class UserAccessController {
     public ResponseEntity<String> addCartItem(@RequestBody CartItem cartItem) {
 
     	String msg =  cartItemService.addCartItem(cartItem);
-    	if(msg == "Item added to cart successfully!") {
+    	if("Item added to cart successfully!".equals(msg) || "Cart updated: Quantity merged for same size.".equals(msg) || "Cart updated: Size changed and quantity updated.".equals(msg)) {
     		return new ResponseEntity<String>(msg, HttpStatus.OK);
-    	} else if(msg == "Cart item updated with merged quantity!"){
-            return new ResponseEntity<String>(msg,HttpStatus.OK);
-        }else {
+    	} else {
     		throw new CartItemNotFoundException(msg);
-    	}   
+    	}
     
     }
     
@@ -302,20 +292,17 @@ public class UserAccessController {
     @DeleteMapping("/deleteCartItemById/{id}")
     public ResponseEntity<String> deleteCartItem(@PathVariable Long id,@RequestBody CartItem cartItemUserDetails) {
 
-    	String deleted =  cartItemService.deleteCartItem(id, cartItemUserDetails);
+    	String deleted = cartItemService.deleteCartItem(id, cartItemUserDetails);
         logger.info("-----------" + deleted);
-    	if(deleted == "Deleted successfully") {
+    	if("Deleted successfully".equals(deleted)) {
     		return new ResponseEntity<String>("Cart Item id with " + id + " deleted succesfully", HttpStatus.OK);
     	} else {
     		throw new CartItemNotFoundException("Cart Item not found with id: " + id);
     	}
 	}
 
-    @ExceptionHandler(CartItemNotFoundException.class)
-    public ResponseEntity<String> handleOrderNotFoundException(CartItemNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-    
+    // *********** CART EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
+
 
 }
 

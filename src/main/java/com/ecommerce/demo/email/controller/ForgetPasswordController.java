@@ -1,4 +1,4 @@
-package com.ecommerce.demo.email.entities;
+package com.ecommerce.demo.email.controller;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

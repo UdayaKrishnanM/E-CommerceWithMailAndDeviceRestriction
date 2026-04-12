@@ -54,7 +54,7 @@ public class UserController {
     }
     
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<String> handleOrderNotFoundException(UsernameNotFoundException ex) {
+    public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
