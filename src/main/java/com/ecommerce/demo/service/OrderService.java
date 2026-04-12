@@ -507,7 +507,7 @@ public class OrderService {
 					.orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
 			ProductSize selectedSize = product.getSizes().stream()
-					.filter(s -> s.getSize() == cartItem.getProductSize().getSize())
+					.filter(s -> s.getSize().equals(cartItem.getProductSize().getSize()))
 					.findFirst()
 					.orElseThrow(() -> new OrderNotFoundException("Size not available: " + cartItem.getProductSize().getSize()));
 

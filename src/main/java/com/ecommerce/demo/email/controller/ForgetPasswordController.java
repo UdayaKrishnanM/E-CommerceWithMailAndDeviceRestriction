@@ -72,11 +72,6 @@ public class ForgetPasswordController {
 			return new ResponseEntity<String>("OTP already generated", HttpStatus.CONFLICT);
 		}
 
-		// testing if condition
-		if (user.get().getEmail().equalsIgnoreCase(email)) {
-			LoggerFactory.getLogger(getClass()).info("--- CHECKING EMAIL STATEMENT ----");
-		}
-
 		int otp = generateOtp();
 		LoggerFactory.getLogger(getClass()).info(" ------- " + otp);
 

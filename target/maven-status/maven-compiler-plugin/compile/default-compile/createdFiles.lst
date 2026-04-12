@@ -36,6 +36,7 @@ com/ecommerce/demo/repository/ReviewRepository.class
 com/ecommerce/demo/exception/CartItemNotFoundException.class
 com/ecommerce/demo/exception/ReviewNotFoundException.class
 com/ecommerce/demo/model/ProductSize.class
+com/ecommerce/demo/exception/AddressNotFoundException.class
 com/ecommerce/demo/exception/OrderNotFoundException.class
 com/ecommerce/demo/service/UserAddressService.class
 com/ecommerce/demo/config/SwaggerConfig.class

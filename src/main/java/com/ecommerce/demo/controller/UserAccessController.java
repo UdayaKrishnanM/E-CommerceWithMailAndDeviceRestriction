@@ -44,6 +44,10 @@ public class UserAccessController {
     private ReviewService reviewService;
     private static final Logger logger = LoggerFactory.getLogger(UserAccessController.class);
 
+    private static final String CART_ITEM_ADDED = "Item added to cart successfully!";
+    private static final String CART_ITEM_MERGED = "Cart updated: Quantity merged for same size.";
+    private static final String CART_ITEM_SIZE_CHANGED = "Cart updated: Size changed and quantity updated.";
+
     @Autowired
     private WishlistService wishlistService;
 
@@ -291,8 +295,8 @@ public class UserAccessController {
     @PostMapping("/addcartItems")
     public ResponseEntity<String> addCartItem(@RequestBody CartItem cartItem) {
 
-    	String msg =  cartItemService.addCartItem(cartItem);
-    	if("Item added to cart successfully!".equals(msg) || "Cart updated: Quantity merged for same size.".equals(msg) || "Cart updated: Size changed and quantity updated.".equals(msg)) {
+    	String msg = cartItemService.addCartItem(cartItem);
+    	if(CART_ITEM_ADDED.equals(msg) || CART_ITEM_MERGED.equals(msg) || CART_ITEM_SIZE_CHANGED.equals(msg)) {
     		return new ResponseEntity<String>(msg, HttpStatus.OK);
     	} else {
     		throw new CartItemNotFoundException(msg);
