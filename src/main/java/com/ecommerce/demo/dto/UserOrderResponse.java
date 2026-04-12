@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.ecommerce.demo.model.OrderItem;
+import com.ecommerce.demo.model.OrderStatus;
 
 
 public class UserOrderResponse {
@@ -14,7 +15,7 @@ public class UserOrderResponse {
 		
     private double totalAmount;
 
-    private String status;
+    private OrderStatus status;
     
     private LocalDateTime orderDate;
 
@@ -67,7 +68,7 @@ public class UserOrderResponse {
 	}
 	
 		
-	public UserOrderResponse(UserDTO user, List<ItemDTO> items, double totalAmount, String status,
+	public UserOrderResponse(UserDTO user, List<ItemDTO> items, double totalAmount, OrderStatus status,
 			LocalDateTime orderDate) {
 		super();
 		this.user = user;
@@ -85,11 +86,11 @@ public class UserOrderResponse {
 		this.totalAmount = totalAmount;
 	}
 
-	public String getStatus() {
+	public OrderStatus getStatus() {
 		return status;
 	}
 	
-	public void setStatus(String status) {
+	public void setStatus(OrderStatus status) {
 		this.status = status;
 	}
     

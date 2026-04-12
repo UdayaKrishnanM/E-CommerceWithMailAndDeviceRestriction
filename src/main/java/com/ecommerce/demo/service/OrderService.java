@@ -290,7 +290,8 @@ public class OrderService {
 			item.setProductSize(selectedSize);
 		}
 
-		// Save the order first
+		// Save the order first — set default status to PLACED
+		order.setStatus(OrderStatus.PLACED);
 		order = orderRepository.save(order);
 
 		for (OrderItem item : order.getOrderItems()) {
