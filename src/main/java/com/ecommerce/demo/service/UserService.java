@@ -12,12 +12,12 @@ import com.ecommerce.demo.model.Product;
 import com.ecommerce.demo.model.User;
 import com.ecommerce.demo.repository.LoginDeviceRepository;
 import com.ecommerce.demo.repository.UserRepository;
+import com.ecommerce.demo.security.JwtUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,10 @@ public class UserService {
 	private LoginDeviceRepository deviceRepository;
 
     @Autowired
-    private PasswordEncoder encoder = new BCryptPasswordEncoder();
+    private PasswordEncoder encoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private final Logger logger = LoggerFactory.getLogger(UserService.class);
     
@@ -56,29 +59,19 @@ public class UserService {
     	
     	if(existUser.isPresent()) {
         	String hashedPassword = existUser.get().getPassword();
-            
-            String password = user.getPassword();
-                    
+            boolean isPasswordMatch = encoder.matches(user.getPassword(), hashedPassword);
 
-            boolean isPasswordMatch = encoder.matches(password, hashedPassword);
-
-        	if((existUser.get().getEmail()).equals(user.getEmail())) {
-        		//encode the password
-        		if(isPasswordMatch) {
-					// checking if the no of device slot is full?
-					String ans = loginDevice(user.getEmail(), user.getDevices().get(0).getDeviceId(), user.getDevices().get(0).getLocation(), user.getDevices().get(0).getDeviceName());
-					if(ans.equalsIgnoreCase("Device already logged in.")){
-						return user.getDevices().get(0).getDeviceName() + " already logged in";
-					} else if(ans.equalsIgnoreCase("Already 2 devices logged in, remove one device to login.")){
-						return "Already 2 devices logged in, remove one device to login.";
-					} else if(ans.equalsIgnoreCase("Logged in Back") ){
-						return "Welcome back in this device!!";
-					} else {
-						return "Device logged in successfully";
-					}
-        		} else {
-        			return user.getEmail() + " password incorrect";
-        		}
+        	if(isPasswordMatch) {
+				String deviceResult = loginDevice(user.getEmail(), user.getDevices().get(0).getDeviceId(), user.getDevices().get(0).getLocation(), user.getDevices().get(0).getDeviceName());
+				if(deviceResult.equalsIgnoreCase("Device already logged in.") || deviceResult.equalsIgnoreCase("Logged in Back") || deviceResult.equalsIgnoreCase("Device logged in successfully.")) {
+					return jwtUtil.generateToken(existUser.get().getEmail(), existUser.get().getRoles());
+				} else if(deviceResult.equalsIgnoreCase("Already 2 devices logged in, remove one device to login.")){
+					return "Already 2 devices logged in, remove one device to login.";
+				} else {
+					return "Login failed: " + deviceResult;
+				}
+        	} else {
+        		return user.getEmail() + " password incorrect";
         	}
     	} 
 		return user.getEmail() + " invalid.";    	
@@ -90,20 +83,13 @@ public class UserService {
     	
     	if(existUser.isPresent()) {
         	String hashedPassword = existUser.get().getPassword();
-            
-            String password = user.getPassword();
-                    
+            boolean isPasswordMatch = encoder.matches(user.getPassword(), hashedPassword);
 
-            boolean isPasswordMatch = encoder.matches(password, hashedPassword);
-
-        	if((existUser.get().getEmail()).equals(user.getEmail())) {
-        		//encode the password
-        		if(isPasswordMatch) {
-        			userRepository.deleteById(existUser.get().getId());
-        			return user.getEmail() + " deleted in successfully";
-        		} else {
-        			return user.getEmail() + " password incorrect";
-        		}
+        	if(isPasswordMatch) {
+        		userRepository.deleteById(existUser.get().getId());
+        		return user.getEmail() + " deleted successfully";
+        	} else {
+        		return user.getEmail() + " password incorrect";
         	}
     	} 
 		return user.getEmail() + " not found.";
@@ -114,27 +100,16 @@ public class UserService {
         if(userDetails.isEmpty()) {
     		throw new UsernameNotFoundException("Email ID : " + email + " is not found");
         } else {
-        	return userDetails.map(
-        			order -> {
-    					User user = userDetails.get();
-    					UserDTO userDTO = new UserDTO(user.getUsername(), user.getEmail());
-
-    			            // Create and return the UserDTO
-    			            return userDTO;
-			        });
+        	return userDetails.map(user -> new UserDTO(user.getUsername(), user.getEmail()));
         }
-        
     }
 
 
 
-	// below is new code
-	// ********************
 	public String loginDevice(String email, String deviceId, String location, String deviceName) {
 		User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 		List<LoginDevice> devices = user.getDevices();
 
-		// Check if the device is already logged in
 		for (LoginDevice device : devices) {
 			if (device.getDeviceId().equals(deviceId) && device.isLoggedIn()) {
 				return "Device already logged in.";
@@ -148,18 +123,14 @@ public class UserService {
 			}
 		}
 
-		// Check if there are already two devices logged in
 		long loggedInDevicesCount = devices.stream().filter(LoginDevice::isLoggedIn).count();
 		if (loggedInDevicesCount >= 2) {
 			return "Already 2 devices logged in, remove one device to login.";
 		}
 
-		// Log in the new device
 		LoginDevice device = new LoginDevice(deviceId, location, true, deviceName, user);
-
 		deviceRepository.save(device);
 		return "Device logged in successfully.";
-
 	}
 
 	public String logoutDevice(String email, String deviceId) {
@@ -172,7 +143,6 @@ public class UserService {
 		return "Device logged out successfully.";
 	}
 
-	// this method must be used inside when the user is logged in
 	public List<LoginDevice> getUserDevices(String email) {
 		return deviceRepository.findByUserEmail(email);
 	}
@@ -187,3 +157,4 @@ public class UserService {
 	}
 
 }
+
