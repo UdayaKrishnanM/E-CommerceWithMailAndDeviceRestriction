@@ -5,6 +5,7 @@ import com.ecommerce.demo.dto.ItemDTO;
 import com.ecommerce.demo.dto.ProductDTO;
 import com.ecommerce.demo.dto.ReviewDTO;
 import com.ecommerce.demo.dto.UserOrderResponse;
+import com.ecommerce.demo.dto.WishlistDTO;
 import com.ecommerce.demo.exception.CartItemNotFoundException;
 import com.ecommerce.demo.exception.OrderItemNotFoundException;
 import com.ecommerce.demo.exception.OrderNotFoundException;
@@ -19,12 +20,17 @@ import com.ecommerce.demo.service.CartItemService;
 import com.ecommerce.demo.service.OrderService;
 import com.ecommerce.demo.service.ProductService;
 import com.ecommerce.demo.service.ReviewService;
+import com.ecommerce.demo.service.UserAddressService;
+import com.ecommerce.demo.service.WishlistService;
+import com.ecommerce.demo.model.UserAddress;
 
 import org.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -37,6 +43,12 @@ public class UserAccessController {
     @Autowired
     private ReviewService reviewService;
     private static final Logger logger = LoggerFactory.getLogger(UserAccessController.class);
+
+    @Autowired
+    private WishlistService wishlistService;
+
+    @Autowired
+    private UserAddressService userAddressService;
 
 
 //    @Autowired
@@ -101,7 +113,6 @@ public class UserAccessController {
 
     
     // *********** CREATE ORDER *********//
-    // done
     @PostMapping("/createOrder")
     public ResponseEntity<Optional<UserOrderResponse>> createOrder(@RequestBody Order order) {
         
@@ -112,6 +123,20 @@ public class UserAccessController {
     	} else {
 	  		throw new OrderNotFoundException("Order already exist with id : " + order);
     	}
+    }
+
+    // *********** CHECKOUT FROM CART *********//
+    @PostMapping("/checkout")
+    public ResponseEntity<UserOrderResponse> checkoutFromCart() {
+        String authenticatedEmail;
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            authenticatedEmail = ((UserDetails) principal).getUsername();
+        } else {
+            authenticatedEmail = principal.toString();
+        }
+        UserOrderResponse order = orderService.checkoutFromCart(authenticatedEmail);
+        return ResponseEntity.ok(order);
     }
     
     
@@ -303,6 +328,55 @@ public class UserAccessController {
 
     // *********** CART EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
 
+
+    // ###############################//
+	// ******* WISHLIST ENTITY *******//
+    //--------------------------------//
+
+    @GetMapping("/wishlist")
+    public ResponseEntity<List<WishlistDTO>> getMyWishlist() {
+        return ResponseEntity.ok(wishlistService.getMyWishlist());
+    }
+
+    @PostMapping("/wishlist/add/{productId}")
+    public ResponseEntity<String> addToWishlist(@PathVariable Long productId) {
+        return ResponseEntity.ok(wishlistService.addToWishlist(productId));
+    }
+
+    @DeleteMapping("/wishlist/remove/{productId}")
+    public ResponseEntity<String> removeFromWishlist(@PathVariable Long productId) {
+        return ResponseEntity.ok(wishlistService.removeFromWishlist(productId));
+    }
+
+
+    // ##############################//
+	// ******* ADDRESS ENTITY *******//
+    //-------------------------------//
+
+    @GetMapping("/addresses")
+    public ResponseEntity<List<UserAddress>> getMyAddresses() {
+        return ResponseEntity.ok(userAddressService.getMyAddresses());
+    }
+
+    @PostMapping("/addresses")
+    public ResponseEntity<UserAddress> addAddress(@RequestBody UserAddress address) {
+        return ResponseEntity.ok(userAddressService.addAddress(address));
+    }
+
+    @PutMapping("/addresses/{id}")
+    public ResponseEntity<UserAddress> updateAddress(@PathVariable Long id, @RequestBody UserAddress address) {
+        return ResponseEntity.ok(userAddressService.updateAddress(id, address));
+    }
+
+    @PutMapping("/addresses/{id}/default")
+    public ResponseEntity<String> setDefaultAddress(@PathVariable Long id) {
+        return ResponseEntity.ok(userAddressService.setDefaultAddress(id));
+    }
+
+    @DeleteMapping("/addresses/{id}")
+    public ResponseEntity<String> deleteAddress(@PathVariable Long id) {
+        return ResponseEntity.ok(userAddressService.deleteAddress(id));
+    }
 
 }
 

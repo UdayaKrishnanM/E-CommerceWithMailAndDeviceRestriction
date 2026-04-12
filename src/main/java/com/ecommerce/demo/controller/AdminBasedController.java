@@ -7,6 +7,7 @@ import com.ecommerce.demo.exception.ProductNotFoundException;
 import com.ecommerce.demo.exception.ReviewNotFoundException;
 import com.ecommerce.demo.model.*;
 //import com.ecommerce.demo.service.OrderItemService;
+import com.ecommerce.demo.service.AdminStatsService;
 import com.ecommerce.demo.service.OrderService;
 import com.ecommerce.demo.service.ProductService;
 import com.ecommerce.demo.service.ReviewService;
@@ -37,7 +38,10 @@ public class AdminBasedController {
 //    private OrderItemService orderItemService;
 
     @Autowired
-    private OrderService orderService;   
+    private OrderService orderService;
+
+    @Autowired
+    private AdminStatsService adminStatsService;
     
     
 	private static final Logger logger = LoggerFactory.getLogger(AdminBasedController.class);
@@ -264,11 +268,17 @@ public class AdminBasedController {
         return reviewService.getReviewsByProductId(productId);
     }
     
-    // *********** REVIEW EXCEPTION HANDLER*********//
-    @ExceptionHandler(ReviewNotFoundException.class)
-    public ResponseEntity<String> handleReviewNotFoundException(ReviewNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    // *********** REVIEW EXCEPTION HANDLER handled by GlobalExceptionHandler *********//
+
+
+    // #################################//
+	// ********* ADMIN DASHBOARD *******//
+    //----------------------------------//
+
+    @GetMapping("/dashboard/stats")
+    public ResponseEntity<AdminStatsDTO> getDashboardStats() {
+        return ResponseEntity.ok(adminStatsService.getDashboardStats());
     }
-    
+
    
 }

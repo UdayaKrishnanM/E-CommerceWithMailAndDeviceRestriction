@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.demo.email.dto.MailBody;
+import com.ecommerce.demo.email.entities.ChangePassword;
+import com.ecommerce.demo.email.entities.ForgetPassword;
+import com.ecommerce.demo.email.entities.ForgetPasswordRepo;
 import com.ecommerce.demo.email.services.EmailServices;
 import com.ecommerce.demo.exception.UserNameNotFoundException;
 import com.ecommerce.demo.model.User;

@@ -46,6 +46,9 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
+	@Autowired
+	private CartItemRepository cartItemRepository;
+
 	public List<UserOrderResponse> getAllOrdersByEmail(String email) {
 
 		Optional<User> userExist = userRepository.findByEmail(email);
@@ -481,5 +484,72 @@ public class OrderService {
 
     }
 
+	@Transactional
+	public UserOrderResponse checkoutFromCart(String authenticatedEmail) {
+		User user = userRepository.findByEmail(authenticatedEmail)
+				.orElseThrow(() -> new OrderNotFoundException("User not found: " + authenticatedEmail));
+
+		List<CartItem> cartItems = cartItemRepository.findByUserId(user.getId());
+		if (cartItems.isEmpty()) {
+			throw new OrderNotFoundException("Cart is empty — nothing to checkout");
+		}
+
+		Order order = new Order();
+		order.setUser(user);
+		order.setOrderDate(java.time.LocalDateTime.now());
+		order.setStatus(OrderStatus.PLACED);
+
+		double totalAmount = 0.0;
+		List<OrderItem> orderItems = new ArrayList<>();
+
+		for (CartItem cartItem : cartItems) {
+			Product product = productRepository.findById(cartItem.getProduct().getId())
+					.orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+			ProductSize selectedSize = product.getSizes().stream()
+					.filter(s -> s.getSize() == cartItem.getProductSize().getSize())
+					.findFirst()
+					.orElseThrow(() -> new OrderNotFoundException("Size not available: " + cartItem.getProductSize().getSize()));
+
+			if (selectedSize.getStockQuantity() < cartItem.getQuantity()) {
+				throw new OrderNotFoundException("Insufficient stock for " + product.getName() + " size " + selectedSize.getSize());
+			}
+
+			selectedSize.setStockQuantity(selectedSize.getStockQuantity() - cartItem.getQuantity());
+			productRepository.save(product);
+
+			OrderItem orderItem = new OrderItem();
+			orderItem.setProduct(product);
+			orderItem.setQuantity(cartItem.getQuantity());
+			orderItem.setPrice(product.getPrice());
+			orderItem.setSize(selectedSize);
+			orderItem.setOrder(order);
+			orderItems.add(orderItem);
+			totalAmount += orderItem.calculateSubtotal();
+		}
+
+		order.setTotalAmount(totalAmount);
+		orderRepository.save(order);
+		orderItemRepository.saveAll(orderItems);
+
+		// Clear cart after successful checkout
+		cartItemRepository.deleteAll(cartItems);
+
+		UserDTO userDTO = new UserDTO(user.getUsername(), user.getEmail());
+		List<ItemDTO> itemDTOs = orderItems.stream().map(item -> {
+			String sizeStr = item.getSize().getSize().toString();
+			ProductDTO productDTO = new ProductDTO(
+					item.getProduct().getName(),
+					item.getProduct().getDescription(),
+					item.getProduct().getPrice(),
+					item.getProduct().getCategory(),
+					sizeStr
+			);
+			return new ItemDTO(productDTO, item.getQuantity(), item.getPrice());
+		}).collect(Collectors.toList());
+
+		return new UserOrderResponse(userDTO, itemDTOs, totalAmount, OrderStatus.PLACED, order.getOrderDate());
+	}
 
 }
+
